@@ -1,0 +1,8 @@
+# TP Planner - Apache config
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase "/TP PLANNER/"
+    # Optional: redirect to login if not authenticated (handled in PHP)
+</IfModule>
+php_value upload_max_filesize 10M
+php_value post_max_size 10M

@@ -1,0 +1,10 @@
+-- TP Planner - Schéma des tables (celui que vous avez créé manuellement)
+
+-- users(id, name, email, password, role, created_at)
+-- classes(id, name, teacher_id, created_at)
+-- tp_sessions(id, title, class_id, objectives, skills, duration, created_at)
+-- tp_steps(id, tp_id, step_number, description)
+-- tp_materials(id, tp_id, name, type)
+-- tp_checklists(id, tp_id, phase, item, is_done)
+-- tp_quizzes(id, tp_id, question, option_a, option_b, option_c, option_d, correct_option)
+-- quiz_answers(id, quiz_id, student_name, selected_option, score, created_at)

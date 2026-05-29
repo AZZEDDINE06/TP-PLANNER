@@ -1,0 +1,11 @@
+{
+    "name": "tp-planner/app",
+    "description": "TP Planner - Practical work session manager",
+    "require": {
+        "php": ">=7.4",
+        "tecnickcom/tcpdf": "^6.11"
+    },
+    "config": {
+        "vendor-dir": "vendor"
+    }
+}
