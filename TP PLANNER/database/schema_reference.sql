@@ -1,10 +1,7 @@
--- TP Planner - Schéma des tables (celui que vous avez créé manuellement)
+-- TP Planner - Schéma des tables
 
--- users(id, name, email, password, role, created_at)
--- classes(id, name, teacher_id, created_at)
--- tp_sessions(id, title, class_id, objectives, skills, duration, created_at)
--- tp_steps(id, tp_id, step_number, description)
--- tp_materials(id, tp_id, name, type)
--- tp_checklists(id, tp_id, phase, item, is_done)
--- tp_quizzes(id, tp_id, question, option_a, option_b, option_c, option_d, correct_option)
--- quiz_answers(id, quiz_id, student_name, selected_option, score, created_at)
+-- users(id, name, email, password, role ENUM('admin'), created_at)  — administrateurs uniquement
+-- students(id, name, email, password, class_id → classes.id, created_at)  — professeurs stagiaires
+-- classes(id, name, teacher_id → users.id, created_at)
+-- tp_sessions, tp_steps, tp_materials, tp_checklists, tp_quizzes, quiz_answers
+-- site_settings(setting_key, setting_value) — optionnel (page d’accueil)
