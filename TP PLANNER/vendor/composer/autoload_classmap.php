@@ -8,6 +8,8 @@ $baseDir = dirname($vendorDir);
 return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
     'Datamatrix' => $vendorDir . '/tecnickcom/tcpdf/include/barcodes/datamatrix.php',
+    'FPDF' => $vendorDir . '/propa/tcpdi/tcpdi.php',
+    'FPDF_TPL' => $vendorDir . '/propa/tcpdi/fpdf_tpl.php',
     'PDF417' => $vendorDir . '/tecnickcom/tcpdf/include/barcodes/pdf417.php',
     'QRcode' => $vendorDir . '/tecnickcom/tcpdf/include/barcodes/qrcode.php',
     'TCPDF' => $vendorDir . '/tecnickcom/tcpdf/tcpdf.php',
@@ -19,4 +21,7 @@ return array(
     'TCPDF_FONT_DATA' => $vendorDir . '/tecnickcom/tcpdf/include/tcpdf_font_data.php',
     'TCPDF_IMAGES' => $vendorDir . '/tecnickcom/tcpdf/include/tcpdf_images.php',
     'TCPDF_STATIC' => $vendorDir . '/tecnickcom/tcpdf/include/tcpdf_static.php',
+    'TCPDI' => $vendorDir . '/propa/tcpdi/tcpdi.php',
+    'TcpdiParserException' => $vendorDir . '/propa/tcpdi/tcpdi_parser.php',
+    'tcpdi_parser' => $vendorDir . '/propa/tcpdi/tcpdi_parser.php',
 );
