@@ -5,69 +5,58 @@ requireTeacher();
 $conn = getDB();
 $message = '';
 $error = '';
-$teacherId = currentTeacherId();
-$isAdmin = isAdmin();
 
 // Delete
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id']) && verify_csrf()) {
     $id = (int) $_POST['delete_id'];
     try {
-        if ($isAdmin) {
-            $conn->query("DELETE FROM classes WHERE id = $id");
-        } else {
-            $conn->query("DELETE FROM classes WHERE id = $id AND teacher_id = $teacherId");
-            if ($conn->affected_rows === 0) throw new Exception('Forbidden');
-        }
-        flash('success', 'Class deleted.');
+        $conn->query("DELETE FROM classes WHERE id = $id");
+        flash('success', t('classes.flash_deleted'));
         redirect(APP_URL . '/pages/classes.php');
     } catch (Exception $e) {
-        $error = 'Could not delete (maybe in use).';
+        $error = t('classes.err_delete');
     }
 }
 
 // Create/Update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && verify_csrf()) {
     $name = trim($_POST['name'] ?? '');
-    $teacher_id = null;
-    if ($isAdmin) {
-        $teacher_id = !empty($_POST['teacher_id']) ? (int) $_POST['teacher_id'] : null;
-    } else {
-        $teacher_id = $teacherId;
-    }
+    $teacher_id = !empty($_POST['teacher_id']) ? (int) $_POST['teacher_id'] : null;
     $id = isset($_POST['id']) ? (int) $_POST['id'] : 0;
     if ($name === '') {
-        $error = 'Le nom est requis.';
+        $error = t('classes.err_name');
     } else {
         try {
             if ($id) {
-                if ($isAdmin) {
+                if ($teacher_id === null) {
+                    $stmt = $conn->prepare('UPDATE classes SET name = ?, teacher_id = NULL WHERE id = ?');
+                    $stmt->bind_param('si', $name, $id);
+                } else {
                     $stmt = $conn->prepare('UPDATE classes SET name = ?, teacher_id = ? WHERE id = ?');
                     $stmt->bind_param('sii', $name, $teacher_id, $id);
-                } else {
-                    $stmt = $conn->prepare('UPDATE classes SET name = ?, teacher_id = ? WHERE id = ? AND teacher_id = ?');
-                    $stmt->bind_param('siii', $name, $teacher_id, $id, $teacherId);
                 }
                 $stmt->execute();
-                if (!$isAdmin && $stmt->affected_rows === 0) throw new Exception('Forbidden');
-                flash('success', 'Classe mise à jour.');
+                flash('success', t('classes.flash_updated'));
             } else {
-                $stmt = $conn->prepare('INSERT INTO classes (name, teacher_id) VALUES (?, ?)');
-                $stmt->bind_param('si', $name, $teacher_id);
+                if ($teacher_id === null) {
+                    $stmt = $conn->prepare('INSERT INTO classes (name, teacher_id) VALUES (?, NULL)');
+                    $stmt->bind_param('s', $name);
+                } else {
+                    $stmt = $conn->prepare('INSERT INTO classes (name, teacher_id) VALUES (?, ?)');
+                    $stmt->bind_param('si', $name, $teacher_id);
+                }
                 $stmt->execute();
-                flash('success', 'Classe créée.');
+                flash('success', t('classes.flash_created'));
             }
             redirect(APP_URL . '/pages/classes.php');
         } catch (Exception $e) {
-            $error = 'Enregistrement impossible.';
+            $error = t('classes.err_save');
         }
     }
 }
 
 // Teachers for dropdown
-$teachers = [];
-if ($isAdmin) {
-    $teachers = $conn->query("SELECT id, name FROM users WHERE role IN ('teacher','admin') ORDER BY name")->fetch_all(MYSQLI_ASSOC);
-}
+$teachers = $conn->query("SELECT id, name FROM users WHERE role = 'admin' ORDER BY name")->fetch_all(MYSQLI_ASSOC);
 
 // List with search
 $search = trim($_GET['search'] ?? '');
@@ -76,15 +65,10 @@ $sql = 'SELECT c.id, c.name, c.teacher_id,
         FROM classes c WHERE 1=1';
 $params = [];
 $types = '';
-if (!$isAdmin) {
-    $sql .= ' AND c.teacher_id = ?';
-    $params[] = $teacherId;
-    $types .= 'i';
-}
 if ($search !== '') {
     $sql .= ' AND c.name LIKE ?';
     $params[] = "%$search%";
-    $types .= 's';
+    $types = 's';
 }
 $sql .= ' ORDER BY c.name';
 $stmt = $conn->prepare($sql);
@@ -97,7 +81,6 @@ foreach ($classes as &$c) {
         foreach ($teachers as $t) {
             if ((int)$t['id'] === (int)$c['teacher_id']) { $c['teacher_name'] = $t['name']; break; }
         }
-        if (!$c['teacher_name'] && !$isAdmin) $c['teacher_name'] = $_SESSION['username'] ?? null;
     }
 }
 unset($c);
@@ -121,9 +104,9 @@ require_once dirname(__DIR__) . '/includes/navbar.php';
 ?>
 <main class="container py-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-        <h1 class="page-title mb-0">Classes</h1>
+        <h1 class="page-title mb-0"><?= escape(t('classes.title')) ?></h1>
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#classModal" data-action="create">
-            <i class="bi bi-plus-lg me-1"></i> Add class
+            <i class="bi bi-plus-lg me-1"></i> <?= escape(t('classes.add')) ?>
         </button>
     </div>
 
@@ -140,11 +123,11 @@ require_once dirname(__DIR__) . '/includes/navbar.php';
         <div class="card-body">
             <form method="get" class="row g-2">
                 <div class="col-md-8">
-                    <input type="text" name="search" class="form-control" placeholder="Search classes..." value="<?= escape($search) ?>">
+                    <input type="text" name="search" class="form-control" placeholder="<?= escape(t('classes.search_ph')) ?>" value="<?= escape($search) ?>">
                 </div>
                 <div class="col-md-4">
-                    <button type="submit" class="btn btn-outline-primary me-2">Search</button>
-                    <a href="<?= APP_URL ?>/pages/classes.php" class="btn btn-outline-secondary">Reset</a>
+                    <button type="submit" class="btn btn-outline-primary me-2"><?= escape(t('classes.search')) ?></button>
+                    <a href="<?= APP_URL ?>/pages/classes.php" class="btn btn-outline-secondary"><?= escape(t('classes.reset')) ?></a>
                 </div>
             </form>
         </div>
@@ -155,18 +138,18 @@ require_once dirname(__DIR__) . '/includes/navbar.php';
             <?php if (empty($classes)): ?>
                 <div class="empty-state">
                     <i class="bi bi-people"></i>
-                    <p class="mb-0">No classes found</p>
-                    <button type="button" class="btn btn-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#classModal">Add class</button>
+                    <p class="mb-0"><?= escape(t('classes.empty')) ?></p>
+                    <button type="button" class="btn btn-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#classModal"><?= escape(t('classes.add')) ?></button>
                 </div>
             <?php else: ?>
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Nom</th>
-                                <th>Enseignant</th>
-                                <th>Sessions TP</th>
-                                <th width="140">Actions</th>
+                                <th><?= escape(t('classes.col_name')) ?></th>
+                                <th><?= escape(t('classes.col_teacher')) ?></th>
+                                <th><?= escape(t('classes.col_sessions')) ?></th>
+                                <th width="140"><?= escape(t('classes.col_actions')) ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -176,12 +159,12 @@ require_once dirname(__DIR__) . '/includes/navbar.php';
                                     <td><?= escape($c['teacher_name'] ?? '—') ?></td>
                                     <td><span class="badge bg-secondary"><?= (int)($c['session_count'] ?? 0) ?></span></td>
                                     <td>
-                                        <a href="<?= APP_URL ?>/pages/tp_sessions.php?class_id=<?= (int)$c['id'] ?>" class="btn btn-sm btn-outline-primary">Sessions</a>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary btn-edit-class" data-id="<?= (int)$c['id'] ?>" data-name="<?= escape($c['name']) ?>" data-teacher="<?= (int)($c['teacher_id'] ?? 0) ?>">Modifier</button>
-                                        <form method="post" class="d-inline" onsubmit="return confirm('Supprimer cette classe ?');">
+                                        <a href="<?= APP_URL ?>/pages/tp_sessions.php?class_id=<?= (int)$c['id'] ?>" class="btn btn-sm btn-outline-primary"><?= escape(t('classes.btn_sessions')) ?></a>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary btn-edit-class" data-id="<?= (int)$c['id'] ?>" data-name="<?= escape($c['name']) ?>" data-teacher="<?= (int)($c['teacher_id'] ?? 0) ?>"><?= escape(t('classes.btn_edit')) ?></button>
+                                        <form method="post" class="d-inline" data-confirm="<?= escape(t('classes.confirm_delete')) ?>">
                                             <?= csrf_field() ?>
                                             <input type="hidden" name="delete_id" value="<?= (int)$c['id'] ?>">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">Supprimer</button>
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"><?= escape(t('classes.btn_delete')) ?></button>
                                         </form>
                                     </td>
                                 </tr>
@@ -202,29 +185,27 @@ require_once dirname(__DIR__) . '/includes/navbar.php';
                 <?= csrf_field() ?>
                 <input type="hidden" name="id" id="classId" value="">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="classModalTitle">Add class</h5>
+                    <h5 class="modal-title" id="classModalTitle"><?= escape(t('classes.modal_add')) ?></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Nom *</label>
+                        <label class="form-label"><?= escape(t('classes.label_name')) ?></label>
                         <input type="text" name="name" id="className" class="form-control" required>
                     </div>
-    <?php if ($isAdmin): ?>
-        <div class="mb-3">
-            <label class="form-label">Enseignant</label>
-            <select name="teacher_id" id="classTeacher" class="form-select">
-                <option value="">— Aucun —</option>
-                <?php foreach ($teachers as $t): ?>
-                    <option value="<?= (int)$t['id'] ?>"><?= escape($t['name']) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-    <?php endif; ?>
+                    <div class="mb-3">
+                        <label class="form-label"><?= escape(t('classes.label_teacher')) ?></label>
+                        <select name="teacher_id" id="classTeacher" class="form-select">
+                            <option value=""><?= escape(t('classes.teacher_none')) ?></option>
+                            <?php foreach ($teachers as $t): ?>
+                                <option value="<?= (int)$t['id'] ?>"><?= escape($t['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= escape(t('classes.cancel')) ?></button>
+                    <button type="submit" class="btn btn-primary"><?= escape(t('classes.save')) ?></button>
                 </div>
             </form>
         </div>
@@ -232,13 +213,16 @@ require_once dirname(__DIR__) . '/includes/navbar.php';
 </div>
 
 <script>
+window.__CLASSES_I18N = {
+    modalAdd: <?= json_encode(t('classes.modal_add'), JSON_UNESCAPED_UNICODE) ?>,
+    modalEdit: <?= json_encode(t('classes.modal_edit'), JSON_UNESCAPED_UNICODE) ?>
+};
 document.querySelectorAll('.btn-edit-class').forEach(function(btn) {
     btn.addEventListener('click', function() {
         document.getElementById('classId').value = this.dataset.id;
         document.getElementById('className').value = this.dataset.name;
-        var teacherSelect = document.getElementById('classTeacher');
-        if (teacherSelect) teacherSelect.value = this.dataset.teacher || '';
-        document.getElementById('classModalTitle').textContent = 'Modifier la classe';
+        document.getElementById('classTeacher').value = this.dataset.teacher || '';
+        document.getElementById('classModalTitle').textContent = window.__CLASSES_I18N.modalEdit;
         new bootstrap.Modal(document.getElementById('classModal')).show();
     });
 });
@@ -246,9 +230,8 @@ document.getElementById('classModal').addEventListener('show.bs.modal', function
     if (e.relatedTarget && e.relatedTarget.dataset.action === 'create') {
         document.getElementById('classId').value = '';
         document.getElementById('className').value = '';
-        var teacherSelect = document.getElementById('classTeacher');
-        if (teacherSelect) teacherSelect.value = '';
-        document.getElementById('classModalTitle').textContent = 'Ajouter une classe';
+        document.getElementById('classTeacher').value = '';
+        document.getElementById('classModalTitle').textContent = window.__CLASSES_I18N.modalAdd;
     }
 });
 </script>
