@@ -13,44 +13,6 @@ body {
     background-color: #f8fafc;
 }
 
-/* Subtle background gradient for main pages */
-main.container {
-    max-width: 1140px;
-}
-
-.breadcrumb {
-    --bs-breadcrumb-divider-color: #94a3b8;
-}
-
-.table thead th {
-    font-weight: 600;
-    color: #334155;
-}
-
-.progress {
-    height: 10px;
-    border-radius: 999px;
-    background-color: rgba(148, 163, 184, 0.25);
-}
-.progress-bar {
-    border-radius: 999px;
-}
-
-.nav-tabs .nav-link {
-    border: none;
-    color: #475569;
-    font-weight: 600;
-}
-.nav-tabs .nav-link.active {
-    color: var(--tp-primary);
-    border-bottom: 3px solid var(--tp-primary);
-    background: transparent;
-}
-
-.card-header {
-    border-bottom: 1px solid rgba(148, 163, 184, 0.25);
-}
-
 .card {
     border: none;
     border-radius: 0.5rem;
@@ -149,4 +111,50 @@ main.container {
     font-size: 3rem;
     margin-bottom: 1rem;
     opacity: 0.5;
+}
+
+.tp-rich-content {
+    line-height: 1.55;
+    font-size: 0.98rem;
+}
+.tp-rich-content p:last-child {
+    margin-bottom: 0;
+}
+.tp-rich-content ul,
+.tp-rich-content ol {
+    margin-bottom: 0.5rem;
+    padding-left: 1.25rem;
+}
+.tp-rich-content h2,
+.tp-rich-content h3,
+.tp-rich-content h4 {
+    margin-top: 0.75rem;
+    margin-bottom: 0.35rem;
+    font-size: 1.05rem;
+}
+
+/* Fiche TP — structure stricte */
+.tp-fiche__body {
+    max-width: 920px;
+}
+.tp-section__header {
+    background: #f8fafc;
+    border-bottom: 2px solid #1e3a8a;
+    color: #1e3a8a;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+}
+.tp-section.border-warning .tp-section__header {
+    background: #fffbeb;
+    border-bottom-color: #d97706;
+    color: #92400e;
+}
+.tp-schema-img {
+    max-height: 420px;
+    object-fit: contain;
+}
+.tp-quiz-preview:last-of-type {
+    border-bottom: none !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
 }
